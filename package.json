@@ -1,0 +1,49 @@
+{
+  "name": "omochi-ui-workspace",
+  "private": true,
+  "license": "Apache-2.0",
+  "packageManager": "bun@1.4.3",
+  "scripts": {
+    "build": "bun run --bun --filter '*' build",
+    "quickstart": "bun run build && bun run omochi-ui up --open examples/quickstart/omochi.toml",
+    "test": "bun run build && bun run --bun --filter '*' test",
+    "test:python": "PYTHONPATH=packages/sdk/python/src python3 -m unittest discover -s packages/sdk/python/tests -v",
+    "test:rust": "cargo test --manifest-path packages/sdk/rust/Cargo.toml"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@omochi-ui/sdk": "workspace:*",
+    "@omochi-ui/core": "workspace:*",
+    "@omochi-ui/discovery": "workspace:*",
+    "@omochi-ui/cli": "workspace:*",
+    "@omochi-ui/utils": "workspace:*",
+    "@omochi-ui/dev-server": "workspace:*",
+    "typescript": "^5.9.0",
+    "@types/bun": "^1.3.0"
+  },
+  "engines": {
+    "bun": ">=1.4.3"
+  },
+  "workspaces": [
+    "packages/sdk/typescript",
+    "packages/core",
+    "packages/discovery",
+    "packages/cli",
+    "packages/dev-server",
+    "packages/renderer",
+    "packages/hub-ui",
+    "packages/utils"
+  ],
+  "trustedDependencies": [
+    "esbuild"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  },
+  "description": "Attach browser UIs to Python, TypeScript, and Rust programs with A2UI."
+}

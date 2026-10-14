@@ -1,0 +1,36 @@
+version = 1
+id = "local-development"
+
+[services.quickstart-workspace]
+utility = ["watch", "--name", "Workspace", "--interval", "3s", "--on-change", "--history", "8", "--", "git", "status", "--short", "--branch"]
+cwd = "../.."
+
+[services.quickstart-health]
+utility = ["http", "--name", "Preview health", "--interval", "2s", "--timeout", "1s", "--expect-status", "200", "http://127.0.0.1:5173/"]
+
+[services.quickstart-preview]
+utility = ["process", "--name", "Preview server", "--", "bun", "run", "--filter", "@omochi-ui/dev-server", "dev", "--host", "127.0.0.1", "--port", "5173", "--strictPort"]
+cwd = "../.."
+
+[dashboard]
+name = "Local development"
+
+[[dashboard.rows]]
+panels = ["workspace", "health"]
+height = "medium"
+
+[[dashboard.rows]]
+panels = ["preview"]
+height = "large"
+
+[dashboard.panels.workspace]
+title = "Workspace"
+service = "quickstart-workspace"
+
+[dashboard.panels.health]
+title = "Preview health"
+service = "quickstart-health"
+
+[dashboard.panels.preview]
+title = "Preview server"
+service = "quickstart-preview"

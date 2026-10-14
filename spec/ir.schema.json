@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:omochi-ui:ir:v2",
+  "title": "A2UI Runtime Normalized UI IR",
+  "type": "object",
+  "required": ["irVersion", "surfaceId", "catalogId", "root", "data", "locals", "requiredCapabilities"],
+  "properties": {
+    "irVersion": { "const": "2" },
+    "surfaceId": { "type": "string", "minLength": 1 },
+    "catalogId": { "type": "string", "minLength": 1 },
+    "root": { "$ref": "#/$defs/node" },
+    "data": { "type": "object" },
+    "locals": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["initial"],
+        "properties": { "initial": {}, "resetKey": {} },
+        "additionalProperties": false
+      }
+    },
+    "requiredCapabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["key", "component", "props"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "component": { "type": "string", "minLength": 1 },
+        "props": { "type": "object" },
+        "slots": { "type": "array", "items": { "$ref": "#/$defs/slot" } }
+      },
+      "additionalProperties": false
+    },
+    "slot": {
+      "type": "object",
+      "required": ["path", "kind", "nodes"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^/" },
+        "kind": { "enum": ["single", "list", "template"] },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "dataPath": { "type": "string", "pattern": "^/" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

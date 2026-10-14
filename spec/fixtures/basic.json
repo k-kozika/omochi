@@ -1,0 +1,21 @@
+{
+  "name": "state surface action separation",
+  "initialMessages": [
+    { "version": "v0.9", "createSurface": { "surfaceId": "main", "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json", "sendDataModel": true } },
+    { "version": "v0.9", "updateComponents": { "surfaceId": "main", "components": [
+      { "id": "hello", "component": "Text", "text": "Hello" },
+      { "id": "input:temperature", "component": "Slider", "min": 0, "max": 100, "value": { "path": "/$local/form/temperature" } },
+      { "id": "action:run:label", "component": "Text", "text": "Run" },
+      { "id": "action:run", "component": "Button", "action": { "event": { "name": "run", "context": { "input": { "temperature": { "path": "/$local/form/temperature" } } } } }, "child": "action:run:label" },
+      { "id": "root", "component": "Column", "children": ["hello", "input:temperature", "action:run"] }
+    ] } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/", "value": { "inputs": {}, "$local": { "form": { "temperature": 50 } } } } }
+  ],
+  "action": { "type": "invoke", "action": "run", "input": { "temperature": 75 } },
+  "afterActionMessages": [
+    { "version": "v0.9", "updateComponents": { "surfaceId": "main", "components": [
+      { "id": "result", "component": "Text", "text": "Result: 75" },
+      { "id": "root", "component": "Column", "children": ["hello", "input:temperature", "action:run", "result"] }
+    ] } }
+  ]
+}

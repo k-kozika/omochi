@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "declaration": false,
+    "lib": ["ES2023", "DOM"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

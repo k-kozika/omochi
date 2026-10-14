@@ -1,0 +1,44 @@
+{
+  "name": "@omochi-ui/cli",
+  "private": true,
+  "version": "0.1.0",
+  "description": "CLI tools and stdio/WebSocket bridge for omochi-ui",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "omochi-ui": "./bin/omochi-ui.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && bun test ./test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@a2ui/web_core": "0.10.5",
+    "@omochi-ui/core": "workspace:*",
+    "@omochi-ui/discovery": "workspace:*",
+    "@omochi-ui/hub-ui": "workspace:*",
+    "@omochi-ui/utils": "workspace:*",
+    "smol-toml": "^1.9.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/ws": "^8.18.0",
+    "typescript": "~6.0.2",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

@@ -1,0 +1,44 @@
+.omochi-surface {
+  color-scheme: light;
+  --a2ui-color-background: #fff;
+  --a2ui-color-on-background: #282521;
+  --a2ui-color-surface: #fff;
+  --a2ui-color-on-surface: #282521;
+  --a2ui-color-primary: #5d52c7;
+  --a2ui-color-on-primary: #fff;
+  --a2ui-color-secondary: #eeeaf9;
+  --a2ui-color-on-secondary: #332d61;
+  --a2ui-color-border: #d9d3ca;
+  --a2ui-color-input: #fff;
+  --a2ui-color-on-input: #282521;
+  --a2ui-border-radius: 0.625rem;
+  --a2ui-grid-base: 0.625rem;
+
+
+}
+
+.omochi-surface :where(input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select) {
+  min-height: 40px;
+  border-color: #d9d3ca;
+  background: #fff;
+  color: #282521;
+}
+
+.omochi-surface :where(button, input, textarea, select):focus-visible {
+  outline: 3px solid rgb(93 82 199 / 22%);
+  outline-offset: 2px;
+}
+
+.omochi-surface :where(p, pre) {
+  margin: 0;
+}
+
+.omochi-surface pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.75rem;
+  border-radius: var(--a2ui-border-radius);
+  background: #f5f4f1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

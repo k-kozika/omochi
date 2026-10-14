@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist/contracts",
+    "rootDir": "src",
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/contracts.ts"
+  ]
+}

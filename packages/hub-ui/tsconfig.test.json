@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.contracts.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "declaration": false,
+    "types": [
+      "node", "bun"
+    ]
+  },
+  "include": [
+    "src/contracts.ts",
+    "src/layout.ts",
+    "src/services.ts",
+    "test/**/*.ts"
+  ]
+}

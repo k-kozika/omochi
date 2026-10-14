@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Omochi — OGP card</title>
+  <style>
+    /* Edit the palette here. The export canvas is always 1200 × 630. */
+    :root {
+      --background: #f7f7f0;
+      --panel: #ffffff;
+      --ink: #202b22;
+      --muted: #53634f;
+      --accent: #4f7940;
+      --line: #a7b69e;
+      --font: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; }
+    body {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #e5e9df;
+      color: var(--ink);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+    .viewport { position: relative; }
+    .card {
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      transform-origin: top left;
+      background: var(--background);
+    }
+    h1 {
+      position: absolute;
+      top: 134px;
+      left: 58px;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 125px;
+      font-weight: 750;
+      letter-spacing: -7px;
+      line-height: 1;
+    }
+    .accent-rule {
+      position: absolute;
+      top: 283px;
+      left: 65px;
+      width: 74px;
+      height: 5px;
+      border-radius: 9px;
+      background: var(--accent);
+    }
+    .description {
+      position: absolute;
+      top: 322px;
+      left: 64px;
+      margin: 0;
+      font-size: 31px;
+      font-weight: 700;
+      line-height: 1.75;
+      letter-spacing: -.025em;
+    }
+    .diagram {
+      position: absolute;
+      top: 113px;
+      left: 617px;
+      width: 520px;
+      height: 342px;
+    }
+    .diagram text { font-family: var(--font); }
+    .caption { fill: var(--muted); font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+    .program-label { fill: var(--ink); font-family: Arial, sans-serif !important; font-size: 23px; font-weight: 600; }
+    .control-label { fill: var(--muted); font-family: Arial, sans-serif !important; font-size: 14px; }
+    .footer {
+      position: absolute;
+      bottom: 56px;
+      left: 64px;
+      right: 64px;
+      padding-top: 25px;
+      border-top: 1px solid #cbd3c4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .promise { margin: 0; font-size: 23px; font-weight: 500; letter-spacing: .035em; }
+    .protocol-note { color: var(--muted); font-family: Arial, sans-serif; font-size: 15px; letter-spacing: .04em; }
+    @page { size: 1200px 630px; margin: 0; }
+    @media print {
+      body { display: block; background: var(--background); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .viewport { width: 1200px !important; height: 630px !important; }
+      .card { transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="viewport">
+    <article class="card" aria-label="Omochi プログラムに操作画面をつける共通基盤">
+      <!-- Main copy: edit these text nodes directly. -->
+      <h1>Omochi</h1>
+      <div class="accent-rule" aria-hidden="true"></div>
+      <p class="description">プログラムに操作画面をつける<br>共通基盤</p>
+
+      <!-- Concept diagram, not a product screenshot. All elements remain editable. -->
+      <svg class="diagram" viewBox="0 0 520 342" role="img" aria-labelledby="diagram-title diagram-desc">
+        <title id="diagram-title">二台のコンピューターのプログラムを、共通の操作画面から使う</title>
+        <desc id="diagram-desc">PC 1にはPythonとRustの二つのプログラム、PC 2にはCLIがあり、三つとも同じ操作画面につながる概念図。</desc>
+
+        <!-- Two computers feed the same interface; lines are not app-to-app links. -->
+        <g fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 159 97 H 183 Q 200 97 200 114 V 173"/>
+          <path d="M 159 160 H 187 Q 200 160 200 173 V 185"/>
+          <path d="M 159 294 H 183 Q 200 294 200 277 V 185"/>
+          <path d="M 200 185 H 246"/>
+          <path d="M 237 178 L 246 185 L 237 192"/>
+        </g>
+        <circle cx="200" cy="185" r="5" fill="var(--accent)"/>
+
+        <!-- PC 1 contains two programs. -->
+        <rect x="1" y="19" width="158" height="185" rx="14" fill="#edf1e7" stroke="var(--line)" stroke-width="1.5"/>
+        <g transform="translate(16 34)" fill="none" stroke="var(--muted)" stroke-width="1.7" stroke-linecap="round">
+          <rect width="20" height="13" rx="2"/><path d="M 10 13 V 18 M 5 18 H 15"/>
+        </g>
+        <text class="caption" x="47" y="50">Local</text>
+        <rect x="14" y="71" width="132" height="52" rx="9" fill="var(--panel)" stroke="#c4cfbd"/>
+        <rect x="27" y="89" width="5" height="16" rx="2.5" fill="#5d853d"/>
+        <text class="program-label" x="43" y="105">MCP</text>
+        <rect x="14" y="134" width="132" height="52" rx="9" fill="var(--panel)" stroke="#c4cfbd"/>
+        <rect x="27" y="152" width="5" height="16" rx="2.5" fill="#50877c"/>
+        <text class="program-label" x="43" y="168">Metrics</text>
+
+        <!-- PC 2 contains one program. -->
+        <rect x="1" y="222" width="158" height="114" rx="14" fill="#edf1e7" stroke="var(--line)" stroke-width="1.5"/>
+        <g transform="translate(16 237)" fill="none" stroke="var(--muted)" stroke-width="1.7" stroke-linecap="round">
+          <rect width="20" height="13" rx="2"/><path d="M 10 13 V 18 M 5 18 H 15"/>
+        </g>
+        <text class="caption" x="47" y="253">Remote</text>
+        <rect x="14" y="268" width="132" height="52" rx="9" fill="var(--panel)" stroke="#c4cfbd"/>
+        <rect x="27" y="286" width="5" height="16" rx="2.5" fill="#a3863c"/>
+        <text class="program-label" x="43" y="302">CLI</text>
+
+        <!-- One shared interface, with controls from both computers. -->
+        <text class="caption" x="261" y="48">Interface</text>
+        <rect x="261" y="65" width="257" height="251" rx="16" fill="var(--panel)" stroke="#829873" stroke-width="1.5"/>
+        <path d="M 261 99 H 518" stroke="#c4cfbd"/>
+        <g fill="#829873"><circle cx="278" cy="82" r="3"/><circle cx="290" cy="82" r="3"/><circle cx="302" cy="82" r="3"/></g>
+
+        <rect x="277" y="116" width="225" height="51" rx="8" fill="#eaf1e1"/>
+        <circle cx="294" cy="141" r="4" fill="#5d853d"/>
+        <text class="control-label" x="307" y="146">Status</text>
+        <rect x="451" y="132" width="35" height="19" rx="9.5" fill="#5d853d"/>
+        <circle cx="476" cy="141.5" r="6.5" fill="#ffffff"/>
+
+        <rect x="277" y="178" width="225" height="51" rx="8" fill="#e7f0eb"/>
+        <text class="control-label" x="292" y="208">Level</text>
+        <path d="M 346 204 H 485" stroke="#bacdc4" stroke-width="4" stroke-linecap="round"/>
+        <path d="M 346 204 H 434" stroke="#50877c" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="434" cy="204" r="7" fill="#50877c"/>
+
+        <rect x="277" y="240" width="225" height="59" rx="8" fill="#f3efdf"/>
+        <text class="control-label" x="292" y="275">Command</text>
+        <rect x="414" y="252" width="72" height="34" rx="7" fill="#d9c787"/>
+        <path d="M 428 263 L 428 275 L 437 269 Z" fill="#3f381e"/>
+        <text x="446" y="274" fill="#3f381e" font-size="14" font-weight="700">Run</text>
+      </svg>
+
+      <footer class="footer">
+        <p class="promise">つながる。見つかる。組み合わせられる。</p>
+        <span class="protocol-note">Built on A2UI</span>
+      </footer>
+    </article>
+  </main>
+  <script>
+    // Only scales the preview; the artwork always uses 1200 × 630 coordinates.
+    const viewport = document.querySelector('.viewport');
+    const card = document.querySelector('.card');
+    function fit() {
+      const scale = Math.min(window.innerWidth / 1200, window.innerHeight / 630);
+      viewport.style.width = `${1200 * scale}px`;
+      viewport.style.height = `${630 * scale}px`;
+      card.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', fit);
+    fit();
+  </script>
+</body>
+</html>

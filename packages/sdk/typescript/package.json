@@ -1,0 +1,43 @@
+{
+  "name": "@omochi-ui/sdk",
+  "version": "0.1.0",
+  "description": "Declarative, transport-independent application runtime for A2UI",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@a2ui/web_core": "0.10.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.0",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && bun test ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/sdk/typescript"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

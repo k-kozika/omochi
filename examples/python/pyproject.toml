@@ -1,0 +1,12 @@
+[project]
+name = "python"
+version = "0.1.0"
+description = "Python SDK example for the Omochi browser preview"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "omochi-ui",
+]
+
+[tool.uv.sources]
+omochi-ui = { workspace = true }

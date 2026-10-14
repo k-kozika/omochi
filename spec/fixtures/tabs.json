@@ -1,0 +1,18 @@
+{
+  "name": "tabs preserve titles and sibling children",
+  "initialComponents": [
+    { "id": "first", "component": "Text", "text": "A" },
+    { "id": "second", "component": "Text", "text": "B" },
+    { "id": "tabs", "component": "Tabs", "tabs": [
+      { "title": "First", "child": "first" },
+      { "title": "Second", "child": "second" }
+    ] },
+    { "id": "root", "component": "Column", "children": ["tabs"] }
+  ],
+  "afterUpdateComponents": [
+    { "id": "tabs", "component": "Tabs", "tabs": [
+      { "title": "First", "child": "first" },
+      { "title": "Renamed", "child": "second" }
+    ] }
+  ]
+}

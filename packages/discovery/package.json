@@ -1,0 +1,50 @@
+{
+  "name": "@omochi-ui/discovery",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Finding and reaching omochi backends: the app registry, the gateway, and its clients",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && bun test ./test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "bonjour-service": "^1.4.4",
+    "@omochi-ui/core": "workspace:*",
+    "ws": "^8.18.0",
+    "@peculiar/x509": "^1.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/ws": "^8.18.0",
+    "typescript": "~6.0.2",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/discovery"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

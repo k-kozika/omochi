@@ -1,0 +1,40 @@
+{
+  "name": "@omochi-ui/dev-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Standalone Vite-powered development preview for omochi-ui",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "tsc -p tsconfig.test.json && bun test ./test",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@omochi-ui/renderer": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/dev-server"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@omochi-ui/utils",
+  "version": "0.1.0",
+  "description": "Publish development utilities and agent-created A2UI surfaces to Omochi",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "omochi-utils": "./bin/omochi-utils.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && bun test ./test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "diff": "^9.0.0",
+    "@omochi-ui/core": "workspace:*",
+    "@omochi-ui/sdk": "workspace:*",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.0",
+    "@omochi-ui/discovery": "workspace:*",
+    "ws": "^8.18.0",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/utils"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

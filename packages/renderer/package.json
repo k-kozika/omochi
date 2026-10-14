@@ -1,0 +1,43 @@
+{
+  "name": "@omochi-ui/renderer",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && bun test ./test",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "@a2ui/markdown-it": "0.1.1",
+    "@a2ui/react": "0.10.2",
+    "@a2ui/web_core": "0.10.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2",
+    "@omochi-ui/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-kozika/omochi.git",
+    "directory": "packages/renderer"
+  },
+  "homepage": "https://github.com/k-kozika/omochi#readme",
+  "bugs": {
+    "url": "https://github.com/k-kozika/omochi/issues"
+  }
+}

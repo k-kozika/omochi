@@ -1,0 +1,5 @@
+[run]
+bun = true
+
+[test]
+timeout = 15000
