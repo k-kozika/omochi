@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "omochi-ui"
-version = "0.1.0"
+version = "0.1.1"
 description = "Declarative, transport-independent application runtime for A2UI"
 readme = "README.md"
 license = "Apache-2.0"

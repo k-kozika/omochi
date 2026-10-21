@@ -1,7 +1,7 @@
 {
   "name": "@omochi-ui/dev-server",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Standalone Vite-powered development preview for omochi-ui",
   "license": "Apache-2.0",
   "type": "module",

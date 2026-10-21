@@ -38,9 +38,6 @@ Run the checks affected by your change. Protocol messages, stable IDs,
 reconciliation, and component catalogs must stay aligned across all three SDKs;
 update their tests and shared fixtures in `spec/fixtures` together.
 
-See [Releasing](docs/releasing.md) for the shared version policy, registry setup,
-and the GitHub Actions publication workflow.
-
 After building, `bun packages/hub-ui/test/browser.mjs` runs the dashboard browser
 smoke test with Chromium. Set `CHROMIUM_BIN` if necessary. Screenshots go to
 `/tmp/omochi-hub-screenshots`, or `SCREENSHOT_DIR` when set.

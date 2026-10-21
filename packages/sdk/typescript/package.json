@@ -1,6 +1,6 @@
 {
   "name": "@omochi-ui/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "description": "Declarative, transport-independent application runtime for A2UI",
   "license": "Apache-2.0",

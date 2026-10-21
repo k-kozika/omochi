@@ -2,7 +2,7 @@
   "name": "@omochi-ui/cli",
   "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "engines": { "bun": ">=1.4.3" },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI tools and stdio/WebSocket bridge for omochi-ui",
   "license": "Apache-2.0",
   "type": "module",
