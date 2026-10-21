@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { distributionManifest, existingPyPiFiles, publicationOrder, validateContents, validateVersion, type Manifest } from './release.ts';
+import { distributionManifest, existingPyPiFiles, npmStageId, publicationOrder, validateContents, validateVersion, type Manifest } from './release.ts';
 
 test('release versions must agree across SDKs and match a stable tag', () => {
   validateVersion('0.1.0', { npm: '0.1.0', rust: '0.1.0' }, 'v0.1.0');
@@ -44,4 +44,16 @@ test('PyPI retries skip identical files and fail before uploading conflicting di
   expect(existingPyPiFiles([wheel, sdist], [wheel])).toEqual([wheel.filename]);
   expect(existingPyPiFiles([wheel, sdist], [wheel, sdist])).toEqual([wheel.filename, sdist.filename]);
   expect(() => existingPyPiFiles([wheel, sdist], [wheel, { ...sdist, digests: { sha256: 'other-source' } }])).toThrow('different contents');
+});
+
+test('approval summaries identify the exact staged tarball and reject missing or mismatched stage receipts', () => {
+  const artifact = { name: '@omochi-ui/sdk', version: '0.1.0', integrity: 'sha512-verified-tarball' };
+  const stageId = 'ee383402-ad45-47f4-a9d9-88bb2b250113';
+  const receipt = { ...artifact, stageId };
+  const encode = (value: object) => JSON.stringify({ [artifact.name]: value });
+  expect(npmStageId(encode(receipt), artifact)).toBe(stageId);
+  for (const changes of [{ stageId: undefined }, { stageId: 'invalid-id' }, { version: '0.2.0' }, { name: '@omochi-ui/cli' }, { integrity: 'sha512-other-tarball' }]) {
+    expect(() => npmStageId(encode({ ...receipt, ...changes }), artifact)).toThrow('Unexpected npm staging result');
+  }
+  expect(() => npmStageId('{}', artifact)).toThrow('Unexpected npm staging result');
 });

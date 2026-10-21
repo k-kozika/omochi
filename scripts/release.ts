@@ -30,6 +30,15 @@ interface Workspace { directory: string; manifest: Manifest }
 interface Packed { name: string; version: string; filename: string; integrity: string }
 interface PyPiFile { filename: string; digests: { sha256: string } }
 
+export function npmStageId(json: string, artifact: Pick<Packed, 'name' | 'version' | 'integrity'>): string {
+  const staged = JSON.parse(json)[artifact.name];
+  if (!staged || staged.name !== artifact.name || staged.version !== artifact.version || staged.integrity !== artifact.integrity
+    || typeof staged.stageId !== 'string' || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(staged.stageId)) {
+    throw new Error(`Unexpected npm staging result for ${artifact.name}@${artifact.version}; inspect staged packages on npmjs.com before retrying`);
+  }
+  return staged.stageId;
+}
+
 export function existingPyPiFiles(local: PyPiFile[], remote: PyPiFile[]): string[] {
   const existing: string[] = [];
   for (const file of local) {
@@ -165,7 +174,7 @@ async function pack(): Promise<void> {
   await writeFile(path.join(output, 'manifest.json'), JSON.stringify({ version: release.version, packages }, null, 2) + '\n');
 }
 
-async function publishNpm(): Promise<void> {
+async function stageNpm(): Promise<void> {
   const release = await loadRelease();
   const packed = await Bun.file(path.join(output, 'manifest.json')).json() as { version: string; packages: Packed[] };
   if (packed.version !== release.version || packed.packages.length !== release.packages.length) throw new Error('Unexpected npm artifact manifest');
@@ -191,8 +200,23 @@ async function publishNpm(): Promise<void> {
       throw new Error(`npm lookup failed for ${artifact.name}: HTTP ${response.status}`);
     }
   }
+  if (unpublished.length && process.env.GITHUB_STEP_SUMMARY) {
+    await appendFile(process.env.GITHUB_STEP_SUMMARY, '## npm: maintainer approval required\n\nReview these stages on npmjs.com or with `npm stage view <stage-id>`, then approve each with 2FA in the order below. This job does not approve stages.\n\n| Package | Stage ID |\n| --- | --- |\n');
+  }
   for (const artifact of unpublished) {
-    console.log(run('npm', ['publish', path.join(output, artifact.filename), '--access', 'public', '--provenance', '--ignore-scripts', '--registry', registry]));
+    let result: string;
+    try {
+      result = run('npm', ['stage', 'publish', path.join(output, artifact.filename), '--access', 'public', '--tag', 'latest', '--provenance', '--ignore-scripts', '--json', '--registry', registry]);
+    } catch (error) {
+      // OIDC tokens cannot list or inspect pending stages. Never suppress a
+      // conflict or grant CI extra credentials to bypass maintainer review.
+      throw new Error(`${String(error)}\nIf this version is already staged, review and approve it with 2FA on npmjs.com, then retry. Do not enable direct npm publish.`);
+    }
+    const stageId = npmStageId(result, artifact);
+    console.log(`Staged ${artifact.name}@${artifact.version}: ${stageId}; maintainer 2FA approval required`);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      await appendFile(process.env.GITHUB_STEP_SUMMARY, `| ${artifact.name}@${artifact.version} | \`${stageId}\` |\n`);
+    }
   }
 }
 
@@ -232,7 +256,7 @@ if (import.meta.main) {
     }
     console.log(`Release ${release.version}: ${release.packages.map(({ manifest }) => manifest.name).join(', ')}`);
   } else if (command === 'pack') await pack();
-  else if (command === 'publish-npm') await publishNpm();
+  else if (command === 'stage-npm') await stageNpm();
   else if (command === 'prepare-pypi') await preparePyPi();
-  else throw new Error('Usage: bun scripts/release.ts check [vX.Y.Z] | pack | publish-npm | prepare-pypi');
+  else throw new Error('Usage: bun scripts/release.ts check [vX.Y.Z] | pack | stage-npm | prepare-pypi');
 }

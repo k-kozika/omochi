@@ -13,7 +13,7 @@
     "release:typecheck": "tsc -p scripts/tsconfig.json",
     "release:pack": "bun scripts/release.ts pack",
     "release:smoke": "bun scripts/smoke-npm.ts",
-    "release:publish:npm": "bun scripts/release.ts publish-npm"
+    "release:stage:npm": "bun scripts/release.ts stage-npm"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
