@@ -154,12 +154,12 @@ export default function App() {
       <div className="nav-caption">WORKSPACE</div>
       {!!presets.length && <><div className="nav-section"><span>◇</span> Presets <span className="count">{presets.length}</span></div>
       <nav aria-label="Presets">
-        {presets.map(p => <button key={p.id} className={`dashboard-link ${selected === `preset:${p.id}` ? 'selected' : ''}`} disabled={editing || busy}
+        {presets.map(p => <button key={p.id} className={`dashboard-link ${selected === `preset:${p.id}` ? 'selected' : ''}`} aria-current={selected === `preset:${p.id}` ? 'page' : undefined} disabled={editing || busy}
           onClick={() => { setSelected(`preset:${p.id}`); setError(null); }}>{p.name}</button>)}
       </nav></>}
       <div className="nav-section"><span>▦</span> Dashboards <span className="count">{dashboards.length}</span></div>
       <nav aria-label="Dashboards">
-        {dashboards.map(d => <button key={d.id} className={`dashboard-link ${selected === `dashboard:${d.id}` ? 'selected' : ''}`} disabled={editing || busy}
+        {dashboards.map(d => <button key={d.id} className={`dashboard-link ${selected === `dashboard:${d.id}` ? 'selected' : ''}`} aria-current={selected === `dashboard:${d.id}` ? 'page' : undefined} disabled={editing || busy}
           onClick={() => { setSelected(`dashboard:${d.id}`); setError(null); }}>{d.name}</button>)}
         {!dashboards.length && <p className="sidebar-hint">Your dashboards will appear here.</p>}
       </nav>
@@ -169,7 +169,7 @@ export default function App() {
     <main className="workspace">
       <div className="breadcrumb">Workspace <span>/</span> Dashboards</div>
       <header className="page-header">
-        <div><div className="eyebrow">YOUR WORKSPACE, COMPOSED</div>
+        <div className="header-copy"><div className="eyebrow">YOUR WORKSPACE, COMPOSED</div>
           {editing ? <input className="dashboard-name" aria-label="Dashboard name" maxLength={200} value={draft.name} disabled={busy} onChange={e => setDraft({ ...draft, name: e.target.value })} />
             : <h1>{active?.name ?? 'Dashboards'}</h1>}
           <p className="subtitle">{editing ? 'Arrange your views, then save your dashboard.' : 'Live views from your apps, together in one place.'}</p>
@@ -206,10 +206,10 @@ export default function App() {
             <header className="panel-header">
               {editing && !narrow && <button aria-label={`Move ${panel.title}`} className="drag-handle" disabled={busy}
                 onPointerDown={e => beginGesture(e, panel, 'move')} onPointerMove={moveGesture} onPointerUp={endGesture} onPointerCancel={endGesture}>⠿</button>}
-              <div className="panel-heading">{editing ? <input aria-label={`Panel title ${panel.title}`} maxLength={200} disabled={busy} value={panel.title} onChange={e => changePanel({ ...panel, title: e.target.value })} /> : <h2>{panel.title}</h2>}
-                <small>{service?.node?.name ?? panel.reference.nodeId} / {service?.name ?? panel.reference.serviceId}</small></div>
+              <div className="panel-heading">{editing ? <input aria-label={`Panel title ${panel.title}`} maxLength={200} disabled={busy} value={panel.title} onChange={e => changePanel({ ...panel, title: e.target.value })} /> : <h2 title={panel.title}>{panel.title}</h2>}
+                <small title={`${service?.node?.name ?? panel.reference.nodeId} / ${service?.name ?? panel.reference.serviceId}`}>{service?.node?.name ?? panel.reference.nodeId} / {service?.name ?? panel.reference.serviceId}</small></div>
               {editing ? <button className="icon-button" aria-label={`Remove ${panel.title}`} disabled={busy} onClick={() => setDraft(d => d ? { ...d, panels: d.panels.filter(p => p.id !== panel.id) } : d)}>×</button>
-                : <span className={`signal ${present ? 'online' : ''}`} title={present ? 'Live' : 'Unavailable'} />}
+                : <span className={`signal ${present ? 'online' : ''}`} role="img" aria-label={present ? 'Live' : 'Unavailable'} title={present ? 'Live' : 'Unavailable'} />}
             </header>
             <div className="panel-content">{present ? <SurfaceView session={session} surfaceId={id} />
               : <div className="unavailable"><span>○</span><strong>View unavailable</strong><p>{service?.detail ?? 'Waiting for this app to publish its view.'}</p></div>}</div>
