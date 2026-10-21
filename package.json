@@ -8,7 +8,12 @@
     "quickstart": "bun run build && bun run omochi-ui up --open examples/quickstart/omochi.toml",
     "test": "bun run build && bun run --bun --filter '*' test",
     "test:python": "PYTHONPATH=packages/sdk/python/src python3 -m unittest discover -s packages/sdk/python/tests -v",
-    "test:rust": "cargo test --manifest-path packages/sdk/rust/Cargo.toml"
+    "test:rust": "cargo test --manifest-path packages/sdk/rust/Cargo.toml",
+    "release:check": "bun scripts/release.ts check",
+    "release:typecheck": "tsc -p scripts/tsconfig.json",
+    "release:pack": "bun scripts/release.ts pack",
+    "release:smoke": "bun scripts/smoke-npm.ts",
+    "release:publish:npm": "bun scripts/release.ts publish-npm"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

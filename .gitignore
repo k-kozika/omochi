@@ -150,3 +150,6 @@ dist-test/
 
 # Separate repository prepared for public release
 /.public/
+
+# Verified release distributions
+/artifacts/

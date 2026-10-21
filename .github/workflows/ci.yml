@@ -25,6 +25,9 @@ jobs:
         with:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
+      - run: bun run release:typecheck
+      - run: bun test scripts/release.test.ts
+      - run: bun run release:check
       - run: bun run test
       - run: bun run --bun --filter '*' lint
 

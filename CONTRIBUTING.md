@@ -31,10 +31,15 @@ set `OMOCHI_HUB` to use another address.
 | Preview frontend | `bun run --filter @omochi-ui/dev-server lint` |
 | Dashboard frontend | `bun run --filter @omochi-ui/hub-ui lint` |
 | Rust formatting | `cargo fmt --manifest-path packages/sdk/rust/Cargo.toml --check` |
+| Release versions and dependency graph | `bun test scripts/release.test.ts && bun run release:check` |
+| npm distributions after building | `bun run release:pack && bun run release:smoke` (requires Node/npm) |
 
 Run the checks affected by your change. Protocol messages, stable IDs,
 reconciliation, and component catalogs must stay aligned across all three SDKs;
 update their tests and shared fixtures in `spec/fixtures` together.
+
+See [Releasing](docs/releasing.md) for the shared version policy, registry setup,
+and the GitHub Actions publication workflow.
 
 After building, `bun packages/hub-ui/test/browser.mjs` runs the dashboard browser
 smoke test with Chromium. Set `CHROMIUM_BIN` if necessary. Screenshots go to

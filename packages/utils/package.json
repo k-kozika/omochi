@@ -1,6 +1,8 @@
 {
   "name": "@omochi-ui/utils",
   "version": "0.1.0",
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
+  "engines": { "bun": ">=1.4.3" },
   "description": "Publish development utilities and agent-created A2UI surfaces to Omochi",
   "license": "Apache-2.0",
   "type": "module",

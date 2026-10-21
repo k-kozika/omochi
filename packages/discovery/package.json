@@ -1,6 +1,6 @@
 {
   "name": "@omochi-ui/discovery",
-  "private": true,
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "version": "0.1.0",
   "description": "Finding and reaching omochi backends: the app registry, the gateway, and its clients",
   "license": "Apache-2.0",

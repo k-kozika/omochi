@@ -157,12 +157,14 @@ and have no authentication or TLS.
 | [CLI reference](packages/cli/README.md) | Commands, flags, defaults, and troubleshooting |
 | [Discovery and dashboards](docs/discovery.md) | Local services, remote access, and routing |
 | [Contributing](CONTRIBUTING.md) | Setup, tests, and change guidelines |
+| [Releasing](docs/releasing.md) | Registry installation, Actions publishing, and initial registry setup |
 
 The repository contains SDKs under `packages/sdk/<lang>/` and tools under
 `packages/`, runnable applications under `examples/`, and shared protocol
 contracts and fixtures under `spec/`.
-The CLI and browser applications currently run from this workspace; registry
-installation instructions are not provided yet.
+The CLI and browser applications can run from this workspace. The
+[release guide](docs/releasing.md) describes registry installation after the
+first publication; the CLI requires Bun 1.4.3+ even when installed through npm.
 
 ## License
 

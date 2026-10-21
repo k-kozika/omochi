@@ -1,0 +1,284 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing stable tag on main (vX.Y.Z)'
+        required: true
+        type: string
+      registry:
+        description: 'Registry to publish or retry'
+        type: choice
+        options: [all, npm, pypi, crates]
+        default: all
+      dry_run:
+        description: 'Build and verify distributions without publishing'
+        type: boolean
+        default: true
+      bootstrap:
+        description: 'Use temporary npm/crates.io secrets for the first publication'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      commit: ${{ steps.metadata.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Validate tag, versions and publication graph
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: bun run release:check "$RELEASE_TAG"
+      - id: metadata
+        run: |
+          bun -e 'console.log("version=" + (await Bun.file("packages/sdk/typescript/package.json").json()).version)' >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  typescript:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: bun install --frozen-lockfile
+      - run: bun run release:typecheck
+      - run: bun test scripts/release.test.ts
+      - run: bun run test
+      - run: bun run --bun --filter '*' lint
+      - run: bun run release:pack
+      - run: bun run release:smoke
+      - uses: actions/upload-artifact@v7
+        with:
+          name: npm-distributions
+          path: artifacts/npm/
+          if-no-files-found: error
+          retention-days: 14
+
+  python:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s packages/sdk/python/tests -v
+        env:
+          PYTHONPATH: packages/sdk/python/src
+      - name: Build sdist and wheel, then check metadata
+        if: matrix.python == '3.11'
+        run: |
+          python -m pip install build twine
+          python -m build --outdir artifacts/python packages/sdk/python
+          python -m twine check artifacts/python/*
+          python -m venv "$RUNNER_TEMP/omochi-wheel"
+          "$RUNNER_TEMP/omochi-wheel/bin/python" -m pip install --no-deps artifacts/python/*.whl
+      - name: Import the installed wheel outside the checkout
+        if: matrix.python == '3.11'
+        working-directory: ${{ runner.temp }}
+        run: '"$RUNNER_TEMP/omochi-wheel/bin/python" -c "from omochi_ui import App; assert callable(App)"'
+      - uses: actions/upload-artifact@v7
+        if: matrix.python == '3.11'
+        with:
+          name: python-distributions
+          path: artifacts/python/
+          if-no-files-found: error
+          retention-days: 14
+
+  rust:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --manifest-path packages/sdk/rust/Cargo.toml --check
+      - run: cargo test --manifest-path packages/sdk/rust/Cargo.toml --locked
+      - run: cargo package --manifest-path packages/sdk/rust/Cargo.toml --locked
+      - name: Verify packaged examples
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: cargo check --manifest-path "packages/sdk/rust/target/package/omochi-ui-$VERSION/Cargo.toml" --locked --examples
+      - uses: actions/upload-artifact@v7
+        with:
+          name: rust-distribution
+          path: packages/sdk/rust/target/package/*.crate
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-npm:
+    needs: [prepare, typescript, python, rust]
+    if: (github.event_name == 'release' || !inputs.dry_run) && (github.event_name == 'release' || inputs.registry == 'all' || inputs.registry == 'npm')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      # Node 24's bundled npm may predate Trusted Publishing (npm >= 11.5.1).
+      - run: npm install --global npm@11
+      - uses: actions/download-artifact@v8
+        with:
+          name: npm-distributions
+          path: artifacts/npm/
+      - name: Publish verified tarballs with provenance
+        env:
+          BOOTSTRAP: ${{ inputs.bootstrap || false }}
+          NODE_AUTH_TOKEN: ${{ inputs.bootstrap && secrets.NPM_BOOTSTRAP_TOKEN || '' }}
+        run: |
+          if [[ "$BOOTSTRAP" == true && -z "$NODE_AUTH_TOKEN" ]]; then
+            echo 'Set NPM_BOOTSTRAP_TOKEN in the npm environment for the first publication.' >&2
+            exit 1
+          fi
+          bun run release:publish:npm
+
+  publish-pypi:
+    needs: [prepare, typescript, python, rust]
+    if: (github.event_name == 'release' || !inputs.dry_run) && (github.event_name == 'release' || inputs.registry == 'all' || inputs.registry == 'pypi')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/download-artifact@v8
+        with:
+          name: python-distributions
+          path: artifacts/python/
+      - name: Check published hashes and retain only missing distributions
+        id: existing
+        run: bun scripts/release.ts prepare-pypi
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        if: steps.existing.outputs.publish == 'true'
+        with:
+          packages-dir: artifacts/python/
+          attestations: true
+
+  publish-crates:
+    needs: [prepare, typescript, python, rust]
+    if: (github.event_name == 'release' || !inputs.dry_run) && (github.event_name == 'release' || inputs.registry == 'all' || inputs.registry == 'crates')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/download-artifact@v8
+        with:
+          name: rust-distribution
+          path: artifacts/rust/
+      - name: Check whether this exact crate was already published
+        id: existing
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          status=$(curl --silent --show-error --connect-timeout 10 --max-time 30 \
+            --user-agent 'omochi-release (https://github.com/k-kozika/omochi)' \
+            --output "$RUNNER_TEMP/crate-version.json" --write-out '%{http_code}' \
+            "https://crates.io/api/v1/crates/omochi-ui/$VERSION")
+          case "$status" in
+            200)
+              expected=$(sha256sum "artifacts/rust/omochi-ui-$VERSION.crate" | cut -d' ' -f1)
+              actual=$(jq -r '.version.checksum' "$RUNNER_TEMP/crate-version.json")
+              if [[ "$actual" != "$expected" ]]; then
+                echo 'This crate version already exists with different contents.' >&2
+                exit 1
+              fi
+              echo 'publish=false' >> "$GITHUB_OUTPUT"
+              ;;
+            404) echo 'publish=true' >> "$GITHUB_OUTPUT" ;;
+            *) echo "crates.io lookup failed: HTTP $status" >&2; exit 1 ;;
+          esac
+      - name: Reproduce the verified crate before obtaining publishing credentials
+        if: steps.existing.outputs.publish == 'true'
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          cargo package --manifest-path packages/sdk/rust/Cargo.toml --locked
+          cmp "artifacts/rust/omochi-ui-$VERSION.crate" "packages/sdk/rust/target/package/omochi-ui-$VERSION.crate"
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+        if: steps.existing.outputs.publish == 'true' && !inputs.bootstrap
+      - name: Publish crate
+        if: steps.existing.outputs.publish == 'true'
+        env:
+          BOOTSTRAP: ${{ inputs.bootstrap || false }}
+          CARGO_REGISTRY_TOKEN: ${{ inputs.bootstrap && secrets.CRATES_IO_BOOTSTRAP_TOKEN || steps.auth.outputs.token }}
+        run: |
+          if [[ "$BOOTSTRAP" == true && -z "$CARGO_REGISTRY_TOKEN" ]]; then
+            echo 'Set CRATES_IO_BOOTSTRAP_TOKEN in the crates-io environment for the first publication.' >&2
+            exit 1
+          fi
+          cargo publish --manifest-path packages/sdk/rust/Cargo.toml --locked

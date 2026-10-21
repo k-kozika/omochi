@@ -1,6 +1,6 @@
 {
   "name": "@omochi-ui/core",
-  "private": true,
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "version": "0.1.0",
   "description": "Transport primitives shared by the omochi-ui hub, gateway, and stdio bridge",
   "license": "Apache-2.0",
