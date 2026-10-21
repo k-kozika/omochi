@@ -84,7 +84,7 @@ export function gatewayEndpointKey(endpoint: GatewayEndpoint): string {
 export function gatewayWsUrl(endpoint: GatewayEndpoint, route: string): string {
   return endpoint.kind === 'unix'
     ? `ws+unix:${endpoint.socketPath}:${route}`
-    : `wss://${endpoint.host}:${endpoint.port}${route}`
+    : `wss://${endpoint.host.includes(':') ? `[${endpoint.host}]` : endpoint.host}:${endpoint.port}${route}`
 }
 
 export function gatewayRequestOptions(endpoint: GatewayEndpoint, route: string): RequestOptions {

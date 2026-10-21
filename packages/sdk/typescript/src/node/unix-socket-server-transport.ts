@@ -116,16 +116,21 @@ export class UnixSocketServerTransport implements Transport {
     if (this.closePromise) return this.closePromise;
     this.closed = true;
     this.flushReceivers();
-    process.off("exit", this.exitCleanup);
-    const directory = this.resolvedDirectory;
     this.closePromise = (async () => {
-      // Retract the advertisement before tearing the socket down.
-      if (directory) await removeServiceDirectory(directory);
-      for (const client of this.clients) client.destroy();
-      this.clients.clear();
-      if (this.server.listening) {
-        await new Promise<void>((resolve) => this.server.close(() => resolve()));
+      // Startup may still be binding or writing its manifest when close is called.
+      await this.ready.catch(() => {});
+      const directory = this.resolvedDirectory;
+      try {
+        // Retract the advertisement before tearing the socket down.
+        if (directory) await removeServiceDirectory(directory);
+      } finally {
+        for (const client of this.clients) client.destroy();
+        this.clients.clear();
+        if (this.server.listening) {
+          await new Promise<void>((resolve) => this.server.close(() => resolve()));
+        }
       }
+      process.off("exit", this.exitCleanup);
     })();
     return this.closePromise;
   }
@@ -151,12 +156,12 @@ export class UnixSocketServerTransport implements Transport {
       this.server.once("error", onError);
       this.server.listen(socketPath, () => {
         this.server.off("error", onError);
+        this.resolvedDirectory = directory;
         resolve();
       });
     });
     // Linux enforces unix socket permissions on connect, and listen() applies the umask.
     await chmod(socketPath, 0o600);
-    this.resolvedDirectory = directory;
     const manifest = { name: this.manifestName, socket: SOCKET_FILE_NAME } as {
       name: string;
       icon?: string;
@@ -168,6 +173,7 @@ export class UnixSocketServerTransport implements Transport {
   }
 
   private accept(socket: Socket): void {
+    if (this.closed) { socket.destroy(); return; }
     this.clients.add(socket);
     socket.setNoDelay(true);
     socket.on("error", () => this.clients.delete(socket));

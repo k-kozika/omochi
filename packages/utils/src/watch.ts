@@ -129,8 +129,10 @@ export class CommandWatch extends UtilitySurface {
     this.previousKey = key;
     this.running = false;
     this.status = `${describeResult(result)} · ${formatDuration(result.durationMs)} · ${new Date().toISOString()}`;
-    this.entries.push({ at: new Date().toISOString(), durationMs: result.durationMs, result: describeResult(result), changed });
-    if (this.options.history && this.entries.length > this.options.history) this.entries.splice(0, this.entries.length - this.options.history);
+    if (this.options.history !== undefined && this.options.history > 0) {
+      this.entries.push({ at: new Date().toISOString(), durationMs: result.durationMs, result: describeResult(result), changed });
+      if (this.entries.length > this.options.history) this.entries.splice(0, this.entries.length - this.options.history);
+    }
     if (!this.options.onChange || changed) {
       this.displayedOutput = output;
       this.displayedTruncated = this.current.truncated;

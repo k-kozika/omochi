@@ -22,6 +22,10 @@ function isArrayIndex(value: string): boolean {
   return /^(0|[1-9]\d*)$/.test(value);
 }
 
+function setOwn(target: object, key: string | number, value: unknown): void {
+  Object.defineProperty(target, key, { value, enumerable: true, writable: true, configurable: true });
+}
+
 function updateAtPointer(root: unknown, path: string, present: boolean, value: unknown): unknown {
   if (path === "" || path === "/") return present ? clone(value) : undefined;
 
@@ -35,16 +39,16 @@ function updateAtPointer(root: unknown, path: string, present: boolean, value: u
     let child: unknown;
     if (Array.isArray(current)) {
       if (!isArrayIndex(part)) throw new Error(`array data model path segment must be an index: ${JSON.stringify(part)}`);
-      child = current[Number(part)];
+      child = Object.hasOwn(current, part) ? current[Number(part)] : undefined;
       if (child === null || typeof child !== "object") {
         child = isArrayIndex(nextPart) ? [] : {};
-        current[Number(part)] = child;
+        setOwn(current, part, child);
       }
     } else {
-      child = current[part];
+      child = Object.hasOwn(current, part) ? current[part] : undefined;
       if (child === null || typeof child !== "object") {
         child = isArrayIndex(nextPart) ? [] : {};
-        current[part] = child;
+        setOwn(current, part, child);
       }
     }
     current = child as Record<string, unknown> | unknown[];
@@ -54,10 +58,18 @@ function updateAtPointer(root: unknown, path: string, present: boolean, value: u
   if (Array.isArray(current)) {
     if (!isArrayIndex(last)) throw new Error(`array data model path segment must be an index: ${JSON.stringify(last)}`);
     const position = Number(last);
-    if (present) current[position] = clone(value);
-    else current.splice(position, 1);
+    if (present) setOwn(current, position, clone(value));
+    else if (position < current.length) {
+      // Shift only own indices: splice() would copy inherited entries into the model.
+      for (let index = position; index < current.length - 1; index++) {
+        if (Object.hasOwn(current, index + 1)) setOwn(current, index, current[index + 1]);
+        else delete current[index];
+      }
+      delete current[current.length - 1];
+      current.length -= 1;
+    }
   } else if (present) {
-    current[last] = clone(value);
+    setOwn(current, last, clone(value));
   } else {
     delete current[last];
   }

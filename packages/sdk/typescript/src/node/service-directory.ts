@@ -92,7 +92,7 @@ export async function writeServiceManifest(directory: string, manifest: ServiceM
 
 /** Retracts the advertisement first, then the socket, then the directory itself. */
 export async function removeServiceDirectory(directory: string): Promise<void> {
-  await rm(path.join(directory, "manifest.json"), { force: true });
+  await rm(path.join(directory, "manifest.json"), { recursive: true, force: true });
   await rm(directory, { recursive: true, force: true });
 }
 

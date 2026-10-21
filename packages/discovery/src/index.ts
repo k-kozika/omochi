@@ -112,3 +112,4 @@ export {
   type GatewayTxt,
   type MdnsLocatorOptions,
 } from './gateway/mdns.js'
+export { withStateLock } from './auth/state-lock.js'

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
-import { createConnection, type Socket } from "node:net";
+import { access, mkdtemp, readFile, rm, mkdir } from "node:fs/promises";
+import { createConnection, Socket, type Server } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
@@ -130,6 +130,13 @@ test("recovers a socket left behind by a crash and refuses a live duplicate", as
   const duplicate = new UnixSocketServerTransport({ serviceId: "demo", runtimeDir: root });
   await assert.rejects(duplicate.ready, /already owns/);
   await duplicate.close();
+  assert.equal(cleanupState(duplicate).server.listening, false);
+  assert.equal(cleanupState(duplicate).clients.size, 0);
+  await access(first.socketPath!);
+  await access(path.join(first.directory!, "manifest.json"));
+  const surviving = connectClient(first.socketPath!);
+  await surviving.next();
+  surviving.socket.destroy();
 
   await first.close();
   await running;
@@ -144,4 +151,46 @@ test("recovers a socket left behind by a crash and refuses a live duplicate", as
     await secondRunning;
   });
   assert.ok(restarted.socketPath);
+});
+
+
+function cleanupState(transport: UnixSocketServerTransport) {
+  return transport as unknown as { server: Server; clients: Set<Socket>; exitCleanup: () => void; accept(socket: Socket): void };
+}
+
+test("close during startup is idempotent and leaves no owned resources", async (t) => {
+  const root = await runtimeDir(t);
+  for (let i = 0; i < 5; i++) {
+    const transport = new UnixSocketServerTransport({ serviceId: "early", runtimeDir: root });
+    const state = cleanupState(transport);
+    const first = transport.close();
+    assert.equal(transport.close(), first);
+    assert.ok(process.listeners("exit").includes(state.exitCleanup), "exit cleanup survives pending startup");
+    const late = new Socket();
+    state.accept(late);
+    assert.ok(late.destroyed, "shutdown rejects new connections");
+    await Promise.all([first, transport.close()]);
+    await transport.ready;
+    assert.equal(state.server.listening, false);
+    assert.equal(state.clients.size, 0);
+    assert.ok(!process.listeners("exit").includes(state.exitCleanup));
+    await assert.rejects(access(path.join(root, "early")));
+    assert.equal((await transport[Symbol.asyncIterator]().next()).done, true);
+    await transport.close();
+  }
+});
+
+test("close after a manifest-write failure cleans up the successfully bound socket", async (t) => {
+  const root = await runtimeDir(t);
+  await mkdir(path.join(root, "failed/manifest.json"), { recursive: true });
+  const transport = new UnixSocketServerTransport({ serviceId: "failed", runtimeDir: root });
+  await assert.rejects(transport.ready);
+  assert.equal(transport.directory, path.join(root, "failed"));
+  assert.ok(cleanupState(transport).server.listening);
+  await transport.close();
+  assert.equal(cleanupState(transport).server.listening, false);
+  assert.equal(cleanupState(transport).clients.size, 0);
+  assert.ok(!process.listeners("exit").includes(cleanupState(transport).exitCleanup));
+  await assert.rejects(access(path.join(root, "failed")));
+  await transport.close();
 });

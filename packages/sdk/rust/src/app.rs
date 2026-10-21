@@ -317,25 +317,29 @@ impl<S: Send + Sync + 'static> Runtime<S> {
         self.started = true;
         self.reconciler = Reconciler::new(transport.capabilities());
         self.transport = Some(Box::new(transport));
-        self.render_all_and_send().await?;
-        self.ready = true;
-        loop {
-            let message = match self.transport.as_mut().unwrap().receive().await? {
-                Some(value) => value,
-                None => break,
-            };
-            let observe = message.get("type").and_then(Value::as_str) == Some("getSurface");
-            let responses = self.handle(message).await?;
-            if observe {
-                if let Some(transport) = &mut self.transport {
-                    for response in &responses {
-                        transport.send(response).await?;
+        let result = async {
+            self.render_all_and_send().await?;
+            self.ready = true;
+            loop {
+                let message = match self.transport.as_mut().unwrap().receive().await? {
+                    Some(value) => value,
+                    None => break,
+                };
+                let observe = message.get("type").and_then(Value::as_str) == Some("getSurface");
+                let responses = self.handle(message).await?;
+                if observe {
+                    if let Some(transport) = &mut self.transport {
+                        for response in &responses {
+                            transport.send(response).await?;
+                        }
                     }
                 }
             }
+            Ok(())
         }
+        .await;
         self.shutdown().await;
-        Ok(())
+        result
     }
     pub async fn start(&mut self) -> Result<()> {
         self.start_with(StdioTransport::new()).await

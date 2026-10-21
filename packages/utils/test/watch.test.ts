@@ -59,3 +59,24 @@ function namedAction(name: string): unknown {
   message.action.name = name;
   return message;
 }
+
+for (const history of [undefined, 0, 2]) {
+  test(`watch retains only enabled history (limit ${history})`, async (t) => {
+    const publisher = await publisherFor(t);
+    const watch = new CommandWatch(publisher, {
+      name: "History", intervalMs: 60_000, diff: false, onChange: false, history,
+      command: [process.execPath, "-e", "console.log('completed')"],
+    });
+    t.after(() => watch.close());
+    const internal = watch as unknown as {
+      run(): Promise<void>;
+      onAction(name: string): void;
+      entries: unknown[];
+    };
+    internal.onAction("pause");
+    for (let run = 0; run < 5; run++) {
+      await internal.run();
+      assert.equal(internal.entries.length, Math.min(run + 1, history ?? 0));
+    }
+  });
+}

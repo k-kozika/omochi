@@ -8,6 +8,12 @@
     { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/count", "value": 5 } },
     { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/obsolete" } },
     { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/nested/list/1", "value": 9 } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/__proto__/literal", "value": true } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/constructor/prototype/kept", "value": 7 } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/constructor/prototype/deleted", "value": true } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/constructor/prototype/deleted" } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/a~1b/~0key", "value": "escaped" } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/nested/list/0" } },
     { "version": "v0.9", "createSurface": { "surfaceId": "aux", "catalogId": "first" } },
     { "version": "v0.9", "deleteSurface": { "surfaceId": "aux" } },
     { "version": "v0.9", "createSurface": { "surfaceId": "aux", "catalogId": "second" } },
@@ -16,7 +22,7 @@
   "snapshot": [
     { "version": "v0.9", "createSurface": { "surfaceId": "main", "catalogId": "test", "sendDataModel": true } },
     { "version": "v0.9", "updateComponents": { "surfaceId": "main", "components": [{ "id": "root", "component": "Text", "text": "New" }] } },
-    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/", "value": { "count": 5, "nested": { "list": [1, 9] } } } },
+    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/", "value": { "count": 5, "nested": { "list": [9] }, "__proto__": { "literal": true }, "constructor": { "prototype": { "kept": 7 } }, "a/b": { "~key": "escaped" } } } },
     { "version": "v0.9", "createSurface": { "surfaceId": "aux", "catalogId": "second" } },
     { "version": "v0.9", "updateDataModel": { "surfaceId": "aux", "path": "/", "value": { "rows": [{ "label": "first row" }] } } }
   ]

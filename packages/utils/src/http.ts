@@ -1,7 +1,7 @@
 import { Action, type UI } from "@omochi-ui/sdk";
-import { StringDecoder } from "node:string_decoder";
 import { OutputBuffer, fenced, formatDuration } from "./output.js";
 import { Publisher } from "./publisher.js";
+import { readText } from "./http-body.js";
 import { UtilitySurface } from "./surface.js";
 
 const BODY_LIMIT = 64 * 1024;
@@ -150,43 +150,4 @@ function isJson(contentType: string): boolean {
 function isText(contentType: string): boolean {
   const mediaType = contentType.split(";", 1)[0]!.trim().toLowerCase();
   return mediaType.startsWith("text/") || isJson(contentType) || ["application/javascript", "application/xml", "application/x-www-form-urlencoded"].includes(mediaType) || mediaType.endsWith("+xml");
-}
-
-async function readText(response: Response, limit: number, expected?: string): Promise<{ text: string; truncated: boolean; expectedMatched: boolean }> {
-  if (!response.body) return { text: "", truncated: false, expectedMatched: expected === undefined || expected === "" };
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  const matcher = new TextDecoder();
-  let visibleLength = 0;
-  let totalLength = 0;
-  let truncated = false;
-  let expectedMatched = expected === undefined || expected === "";
-  let matchTail = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      if (expected !== undefined && !expectedMatched) expectedMatched = (matchTail + matcher.decode()).includes(expected);
-      break;
-    }
-    totalLength += value.length;
-    if (visibleLength < limit) {
-      const visible = value.subarray(0, Math.min(value.length, limit - visibleLength));
-      chunks.push(visible);
-      visibleLength += visible.length;
-    }
-    if (expected !== undefined && !expectedMatched) {
-      const searchable = matchTail + matcher.decode(value, { stream: true });
-      expectedMatched = searchable.includes(expected);
-      matchTail = searchable.slice(-Math.max(0, expected.length - 1));
-    }
-    if (totalLength > limit) {
-      truncated = true;
-      if (expected === undefined || expectedMatched) {
-        await reader.cancel();
-        break;
-      }
-    }
-  }
-  const visible = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), visibleLength);
-  return { text: new StringDecoder("utf8").write(visible), truncated, expectedMatched };
 }

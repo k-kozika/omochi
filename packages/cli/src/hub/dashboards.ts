@@ -3,7 +3,7 @@ import { readFile, writeFile, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { isValidNodeId, isValidServiceId } from '@omochi-ui/core';
-import { ensureConfigRoot, omochiConfigRoot } from '@omochi-ui/discovery';
+import { ensureConfigRoot, omochiConfigRoot, withStateLock } from '@omochi-ui/discovery';
 import { overlaps, referenceId, type Dashboard, type DashboardFile, type DashboardInput, type DashboardPreset, type Panel } from '@omochi-ui/hub-ui/contracts';
 
 class HttpError extends Error {
@@ -39,7 +39,7 @@ export function validateDashboard(value: unknown): DashboardInput {
   return { name: value.name.trim(), panels };
 }
 
-/** Re-read under the mutation queue; failed writes never replace the last good file. */
+/** Re-read under the mutation queue and cross-process lock; failed writes never replace the last good file. */
 export class DashboardStore {
   private queue: Promise<unknown> = Promise.resolve();
   private readonly file: string;
@@ -66,22 +66,29 @@ export class DashboardStore {
   async list(): Promise<Dashboard[]> { await this.queue; return (await this.read()).dashboards; }
   mutate(id: string | null, input: unknown, remove = false): Promise<Dashboard | null> {
     const next = this.queue.then(async () => {
-      const file = await this.read();
-      const current = id === null ? undefined : file.dashboards.find(d => d.id === id);
-      if (id !== null && !current) throw new HttpError(404, 'Dashboard not found');
-      if (current && (!record(input) || input.revision !== current.revision)) throw new HttpError(409, 'This dashboard changed elsewhere. Reload before saving.');
-      const dashboard: Dashboard | null = remove ? null : {
-        ...validateDashboard(input), id: current?.id ?? randomUUID(), revision: (current?.revision ?? 0) + 1,
-      };
-      file.dashboards = file.dashboards.filter(d => d.id !== id);
-      if (dashboard) file.dashboards.push(dashboard);
-      await ensureConfigRoot(this.root);
-      const temporary = path.join(this.root, `.dashboards-${randomUUID()}.tmp`);
       try {
-        await writeFile(temporary, JSON.stringify(file, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
-        await rename(temporary, this.file);
-      } finally { await unlink(temporary).catch(() => {}); }
-      return dashboard;
+        await ensureConfigRoot(this.root);
+        return await withStateLock(this.file, async () => {
+          const file = await this.read();
+          const current = id === null ? undefined : file.dashboards.find(d => d.id === id);
+          if (id !== null && !current) throw new HttpError(404, 'Dashboard not found');
+          if (current && (!record(input) || input.revision !== current.revision)) throw new HttpError(409, 'This dashboard changed elsewhere. Reload before saving.');
+          const dashboard: Dashboard | null = remove ? null : {
+            ...validateDashboard(input), id: current?.id ?? randomUUID(), revision: (current?.revision ?? 0) + 1,
+          };
+          file.dashboards = file.dashboards.filter(d => d.id !== id);
+          if (dashboard) file.dashboards.push(dashboard);
+          const temporary = path.join(this.root, `.dashboards-${randomUUID()}.tmp`);
+          try {
+            await writeFile(temporary, JSON.stringify(file, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+            await rename(temporary, this.file);
+          } finally { await unlink(temporary).catch(() => {}); }
+          return dashboard;
+        });
+      } catch (error) {
+        if (error instanceof HttpError) throw error;
+        throw new HttpError(503, 'Could not save dashboard storage');
+      }
     });
     this.queue = next.catch(() => {});
     return next;

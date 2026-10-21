@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { once } from 'node:events'
 import { rm } from 'node:fs/promises'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 import { probeGateway } from '@omochi-ui/discovery'
 
@@ -32,7 +33,7 @@ const idle: GatewaySupervisor = { spawned: false, close: async () => {} }
 
 function gatewayCommand(): string[] {
   // `dist/hub/gateway-supervisor.js` sits one directory below `dist/cli.js`.
-  return [process.execPath, new URL('../cli.js', import.meta.url).pathname, 'gateway']
+  return [process.execPath, fileURLToPath(new URL('../cli.js', import.meta.url)), 'gateway']
 }
 
 async function waitForGateway(socketPath: string, deadline: number, child: ChildProcess | null): Promise<boolean> {
